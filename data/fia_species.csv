@@ -1,0 +1,115 @@
+"genus","species","common_name","dia_max_cm","ht_max_m","woodland","n_records","dia_10cm","dia_20cm","ht_3m","dia_20cm_ht_3m"
+"Abies","amabilis","Pacific silver fir",207.518,71.9512195121951,FALSE,46693,TRUE,TRUE,TRUE,TRUE
+"Abies","concolor","white fir",180.594,68.5975609756098,FALSE,68338,TRUE,TRUE,TRUE,TRUE
+"Abies","grandis","grand fir",206.248,65.2439024390244,FALSE,45912,TRUE,TRUE,TRUE,TRUE
+"Abies","lasiocarpa","subalpine fir",155.956,44.8170731707317,FALSE,25668,TRUE,TRUE,TRUE,TRUE
+"Abies","magnifica","California red fir",243.84,67.0731707317073,FALSE,13963,TRUE,TRUE,TRUE,TRUE
+"Abies","procera","noble fir",212.344,76.219512195122,FALSE,6846,TRUE,TRUE,TRUE,TRUE
+"Abies","shastensis","Shasta red fir",236.982,67.0731707317073,FALSE,7118,TRUE,TRUE,TRUE,TRUE
+"Acer","glabrum","Rocky Mountain maple",94.996,21.0365853658537,TRUE,1844,TRUE,TRUE,TRUE,TRUE
+"Acer","macrophyllum","bigleaf maple",196.596,49.6951219512195,FALSE,12585,TRUE,TRUE,TRUE,TRUE
+"Acer","negundo","boxelder",61.976,24.0853658536585,FALSE,68,TRUE,TRUE,TRUE,TRUE
+"Acer","platanoides","Norway maple",22.352,18.2926829268293,FALSE,2,TRUE,TRUE,TRUE,TRUE
+"Aesculus","californica","California buckeye",49.784,21.0365853658537,FALSE,1206,TRUE,TRUE,TRUE,TRUE
+"Aesculus","spp.","buckeye, horsechestnut spp.",42.672,18.9024390243902,FALSE,155,TRUE,TRUE,TRUE,TRUE
+"Ailanthus","altissima","ailanthus",16.256,11.5853658536585,FALSE,3,TRUE,FALSE,TRUE,FALSE
+"Alnus","rhombifolia","white alder",98.552,35.3658536585366,FALSE,903,TRUE,TRUE,TRUE,TRUE
+"Alnus","rubra","red alder",170.18,47.2560975609756,FALSE,31171,TRUE,TRUE,TRUE,TRUE
+"Arbutus","menziesii","Pacific madrone",181.61,48.780487804878,FALSE,15675,TRUE,TRUE,TRUE,TRUE
+"Betula","occidentalis","water birch",40.386,22.8658536585366,FALSE,111,TRUE,TRUE,TRUE,TRUE
+"Betula","papyrifera","paper birch",71.12,32.0121951219512,FALSE,5000,TRUE,TRUE,TRUE,TRUE
+"Calocedrus","decurrens","incense-cedar",216.662,66.1585365853659,FALSE,25103,TRUE,TRUE,TRUE,TRUE
+"Cercocarpus","ledifolius","curlleaf mountain-mahogany",120.65,27.1341463414634,TRUE,7914,TRUE,TRUE,TRUE,TRUE
+"Chamaecyparis","lawsoniana","Port-Orford-cedar",155.194,58.8414634146341,FALSE,1760,TRUE,TRUE,TRUE,TRUE
+"Chamaecyparis","nootkatensis","Alaska yellow-cedar",215.9,54.5731707317073,FALSE,24113,TRUE,TRUE,TRUE,TRUE
+"Chrysolepis","chrysophylla","giant chinkapin, golden chinkapin",168.402,60.9756097560976,FALSE,5202,TRUE,TRUE,TRUE,TRUE
+"Cornus","nuttallii","Pacific dogwood",91.44,22.5609756097561,FALSE,1406,TRUE,TRUE,TRUE,TRUE
+"Crataegus","spp.","hawthorn spp.",-Inf,-Inf,FALSE,1,FALSE,FALSE,FALSE,FALSE
+"Cupressus","arizonica","Arizona cypress",-Inf,-Inf,FALSE,1,FALSE,FALSE,FALSE,FALSE
+"Cupressus","bakeri","Baker or Modoc cypress",45.974,23.780487804878,FALSE,20,TRUE,TRUE,TRUE,TRUE
+"Cupressus","macnabiana","MacNab's cypress",17.272,4.26829268292683,FALSE,17,TRUE,FALSE,TRUE,FALSE
+"Cupressus","macrocarpa","Monterey cypress",26.67,10.3658536585366,FALSE,22,TRUE,TRUE,TRUE,TRUE
+"Cupressus","sargentii","Sargent's cypress",69.596,20.1219512195122,FALSE,116,TRUE,TRUE,TRUE,TRUE
+"Cupressus","spp.","cypress",43.942,15.2439024390244,FALSE,14,TRUE,TRUE,TRUE,TRUE
+"Elaeagnus","angustifolia","Russian-olive",14.224,7.31707317073171,FALSE,1,TRUE,FALSE,TRUE,FALSE
+"Eucalyptus","globulus","Tasmanian bluegum",79.502,52.1341463414634,FALSE,21,TRUE,TRUE,TRUE,TRUE
+"Eucalyptus","spp.","eucalyptus spp.",133.096,60.3658536585366,FALSE,68,TRUE,TRUE,TRUE,TRUE
+"Fraxinus","latifolia","Oregon ash",119.126,38.109756097561,FALSE,1035,TRUE,TRUE,TRUE,TRUE
+"Fraxinus","spp.","ash spp.",38.1,12.5,FALSE,41,TRUE,TRUE,TRUE,TRUE
+"Fraxinus","velutina","velvet ash",40.894,12.8048780487805,FALSE,5,TRUE,TRUE,TRUE,TRUE
+"Ilex","opaca","American holly",21.59,7.31707317073171,FALSE,4,TRUE,TRUE,TRUE,TRUE
+"Juglans","californica","southern California black walnut",22.86,16.1585365853659,FALSE,22,TRUE,TRUE,TRUE,TRUE
+"Juglans","hindsii","northern California black walnut",79.248,26.5243902439024,FALSE,73,TRUE,TRUE,TRUE,TRUE
+"Juglans","spp.","walnut spp.",60.96,17.9878048780488,FALSE,12,TRUE,TRUE,TRUE,TRUE
+"Juniperus","californica","California juniper",118.872,15.5487804878049,TRUE,1184,TRUE,TRUE,TRUE,TRUE
+"Juniperus","occidentalis","western juniper",261.874,29.2682926829268,FALSE,17164,TRUE,TRUE,TRUE,TRUE
+"Juniperus","osteosperma","Utah juniper",140.716,13.109756097561,TRUE,564,TRUE,TRUE,TRUE,TRUE
+"Juniperus","scopulorum","Rocky Mountain juniper",19.304,6.70731707317073,TRUE,3,TRUE,FALSE,TRUE,FALSE
+"Larix","lyallii","subalpine larch",98.552,39.9390243902439,FALSE,591,TRUE,TRUE,TRUE,TRUE
+"Larix","occidentalis","western larch",167.64,57.3170731707317,FALSE,15396,TRUE,TRUE,TRUE,TRUE
+"Liquidambar","styraciflua","sweetgum",26.416,13.4146341463415,FALSE,1,TRUE,TRUE,TRUE,TRUE
+"Lithocarpus","densiflorus","tanoak",224.282,48.780487804878,FALSE,35396,TRUE,TRUE,TRUE,TRUE
+"Malus","fusca","Oregon crab apple",36.576,19.8170731707317,FALSE,197,TRUE,TRUE,TRUE,TRUE
+"Malus","spp.","apple spp.",45.974,14.9390243902439,FALSE,30,TRUE,TRUE,TRUE,TRUE
+"Olneya","tesota","desert ironwood",100.33,28.9634146341463,TRUE,45,TRUE,TRUE,TRUE,TRUE
+"Picea","breweriana","Brewer spruce",88.9,38.109756097561,FALSE,71,TRUE,TRUE,TRUE,TRUE
+"Picea","engelmannii","Engelmann spruce",128.27,65.5487804878049,FALSE,12801,TRUE,TRUE,TRUE,TRUE
+"Picea","glauca","white spruce",83.312,32.0121951219512,FALSE,8761,TRUE,TRUE,TRUE,TRUE
+"Picea","mariana","black spruce",72.136,34.4512195121951,FALSE,4926,TRUE,TRUE,TRUE,TRUE
+"Picea","sitchensis","Sitka spruce",271.526,76.8292682926829,FALSE,28212,TRUE,TRUE,TRUE,TRUE
+"Pinus","albicaulis","whitebark pine",117.348,56.0975609756098,FALSE,4751,TRUE,TRUE,TRUE,TRUE
+"Pinus","aristata","Rocky Mountain bristlecone pine",109.22,31.4024390243902,FALSE,1,TRUE,TRUE,TRUE,TRUE
+"Pinus","attenuata","knobcone pine",91.44,39.9390243902439,FALSE,1472,TRUE,TRUE,TRUE,TRUE
+"Pinus","balfouriana","foxtail pine",160.782,33.8414634146341,FALSE,646,TRUE,TRUE,TRUE,TRUE
+"Pinus","contorta","lodgepole pine",338.582,44.8170731707317,FALSE,94537,TRUE,TRUE,TRUE,TRUE
+"Pinus","coulteri","Coulter pine",106.68,38.719512195122,FALSE,319,TRUE,TRUE,TRUE,TRUE
+"Pinus","flexilis","limber pine",132.334,36.890243902439,FALSE,259,TRUE,TRUE,TRUE,TRUE
+"Pinus","jeffreyi","Jeffrey pine",201.422,64.3292682926829,FALSE,12425,TRUE,TRUE,TRUE,TRUE
+"Pinus","lambertiana","sugar pine",246.38,79.8780487804878,FALSE,9314,TRUE,TRUE,TRUE,TRUE
+"Pinus","longaeva","Great Basin bristlecone pine",139.192,31.4024390243902,FALSE,269,TRUE,TRUE,TRUE,TRUE
+"Pinus","monophylla","singleleaf pinyon",116.84,20.7317073170732,TRUE,4751,TRUE,TRUE,TRUE,TRUE
+"Pinus","monticola","western white pine",196.596,69.5121951219512,FALSE,6617,TRUE,TRUE,TRUE,TRUE
+"Pinus","muricata","bishop pine",98.552,46.0365853658537,FALSE,236,TRUE,TRUE,TRUE,TRUE
+"Pinus","ponderosa","ponderosa pine",492.76,72.5609756097561,FALSE,111355,TRUE,TRUE,TRUE,TRUE
+"Pinus","radiata","Monterey pine",127,45.1219512195122,FALSE,75,TRUE,TRUE,TRUE,TRUE
+"Pinus","sabiniana","gray or California foothill pine",117.094,45.4268292682927,FALSE,1904,TRUE,TRUE,TRUE,TRUE
+"Pinus","sylvestris","Scotch pine",28.194,18.2926829268293,FALSE,14,TRUE,TRUE,TRUE,TRUE
+"Pinus","washoensis","Washoe pine",89.408,35.0609756097561,FALSE,84,TRUE,TRUE,TRUE,TRUE
+"Platanus","racemosa","California sycamore",116.078,45.7317073170732,FALSE,107,TRUE,TRUE,TRUE,TRUE
+"Populus","balsamifera","black cottonwood",171.196,62.1951219512195,FALSE,3895,TRUE,TRUE,TRUE,TRUE
+"Populus","fremontii","Fremont cottonwood",107.696,49.0853658536585,FALSE,93,TRUE,TRUE,TRUE,TRUE
+"Populus","tremuloides","quaking aspen",86.106,39.6341463414634,FALSE,2989,TRUE,TRUE,TRUE,TRUE
+"Prosopis","glandulosa","honey mesquite ",104.648,18.5975609756098,TRUE,92,TRUE,TRUE,TRUE,TRUE
+"Prosopis","pubescens","screwbean mesquite",27.432,6.09756097560976,TRUE,14,TRUE,TRUE,TRUE,TRUE
+"Prunus","avium","sweet cherry, domesticated",23.876,17.3780487804878,FALSE,31,TRUE,TRUE,TRUE,TRUE
+"Prunus","emarginata","bitter cherry",44.45,35.3658536585366,FALSE,1610,TRUE,TRUE,TRUE,TRUE
+"Prunus","spp.","cherry and plum spp.",45.212,28.6585365853659,FALSE,218,TRUE,TRUE,TRUE,TRUE
+"Prunus","virginiana","chokecherry",34.798,26.5243902439024,FALSE,275,TRUE,TRUE,TRUE,TRUE
+"Pseudotsuga","macrocarpa","bigcone Douglas-fir",121.158,49.0853658536585,FALSE,148,TRUE,TRUE,TRUE,TRUE
+"Pseudotsuga","menziesii","Douglas-fir",365.76,94.2073170731707,FALSE,323626,TRUE,TRUE,TRUE,TRUE
+"Quercus","agrifolia","California live oak",150.622,35.3658536585366,FALSE,4927,TRUE,TRUE,TRUE,TRUE
+"Quercus","chrysolepis","canyon live oak",209.042,46.9512195121951,FALSE,27649,TRUE,TRUE,TRUE,TRUE
+"Quercus","douglasii","blue oak",137.16,23.1707317073171,FALSE,8337,TRUE,TRUE,TRUE,TRUE
+"Quercus","engelmannii","Engelmann oak",105.918,17.6829268292683,FALSE,83,TRUE,TRUE,TRUE,TRUE
+"Quercus","garryana","Oregon white oak",154.686,35.6707317073171,FALSE,9731,TRUE,TRUE,TRUE,TRUE
+"Quercus","kelloggii","California black oak",166.37,46.9512195121951,FALSE,16768,TRUE,TRUE,TRUE,TRUE
+"Quercus","lobata","California white oak",129.032,31.0975609756098,FALSE,822,TRUE,TRUE,TRUE,TRUE
+"Quercus","muehlenbergii","chinkapin oak",36.068,23.1707317073171,FALSE,6,TRUE,TRUE,TRUE,TRUE
+"Quercus","wislizeni","interior live oak",160.782,31.0975609756098,FALSE,7600,TRUE,TRUE,TRUE,TRUE
+"Robinia","pseudoacacia","black locust",85.598,33.2317073170732,FALSE,29,TRUE,TRUE,TRUE,TRUE
+"Salix","alba","white willow",55.118,22.5609756097561,FALSE,16,TRUE,TRUE,TRUE,TRUE
+"Salix","nigra","black willow",16.256,19.8170731707317,FALSE,11,TRUE,FALSE,TRUE,FALSE
+"Salix","pyrifolia","balsam willow",7.874,7.92682926829268,FALSE,3,FALSE,FALSE,TRUE,FALSE
+"Salix","sepulcralis","weeping willow",-Inf,-Inf,FALSE,5,FALSE,FALSE,FALSE,FALSE
+"Salix","spp.","willow spp.",89.662,30.4878048780488,FALSE,388,TRUE,TRUE,TRUE,TRUE
+"Sequoia","sempervirens","redwood",538.734,97.8658536585366,FALSE,15815,TRUE,TRUE,TRUE,TRUE
+"Sequoiadendron","giganteum","giant sequoia",344.424,80.4878048780488,FALSE,53,TRUE,TRUE,TRUE,TRUE
+"Taxus","brevifolia","Pacific yew",70.104,21.6463414634146,FALSE,1777,TRUE,TRUE,TRUE,TRUE
+"Thuja","plicata","western redcedar",354.33,83.8414634146341,FALSE,35371,TRUE,TRUE,TRUE,TRUE
+"Torreya","californica","California torreya (nutmeg)",80.01,28.6585365853659,FALSE,174,TRUE,TRUE,TRUE,TRUE
+"Tree","broadleaf","Unknown dead hardwood",121.92,30.1829268292683,FALSE,74,TRUE,TRUE,TRUE,TRUE
+"Tree","evergreen","Unknown dead conifer",279.4,61.280487804878,FALSE,984,TRUE,TRUE,TRUE,TRUE
+"Tree","unknown","Other or unknown live tree",45.72,24.6951219512195,FALSE,86,TRUE,TRUE,TRUE,TRUE
+"Tsuga","heterophylla","western hemlock",258.572,76.8292682926829,FALSE,141064,TRUE,TRUE,TRUE,TRUE
+"Tsuga","mertensiana","mountain hemlock",175.006,54.8780487804878,FALSE,53523,TRUE,TRUE,TRUE,TRUE
+"Umbellularia","californica","California-laurel",143.002,39.6341463414634,FALSE,6212,TRUE,TRUE,TRUE,TRUE

@@ -40,7 +40,7 @@ gc()
 
 
 ca <- d %>%
-      filter(statecd %in% c(6, 53, 41)) %>%
+      filter(statecd %in% c(2, 6, 41, 53)) %>%
       mutate(woodland = !is.na(wdldstem)) %>%
       group_by(genus, species, common_name) %>%
       summarize(dia_max_cm = max(dia*2.54, na.rm=T),
@@ -52,11 +52,11 @@ ca <- d %>%
              ht_3m = ht_max_m > 3,
              dia_20cm_ht_3m = dia_max_cm > 20 & ht_max_m > 3)
 
-write.csv(ca, "e:/chilefornia/california_fia_species.csv", row.names=F)
+write.csv(ca, "e:/chilefornia/chilefornia/data/fia_species.csv", row.names=F)
 
 
 
-source("e:/chilefornia/jepson_parse.r")
+source("e:/chilefornia/chilefornia/jepson_parse.r")
 
 jepson <- filter(ca, species=="spp.")$genus %>%
       genus_urls() %>%
@@ -65,4 +65,4 @@ jepson <- filter(ca, species=="spp.")$genus %>%
       lapply(species_data) %>%
       Reduce("full_join", .)
       
-write.csv(jepson, "e:/chilefornia/jepson_traits.csv", row.names=F)
+write.csv(jepson, "e:/chilefornia/chilefornia/data/jepson_traits.csv", row.names=F)
