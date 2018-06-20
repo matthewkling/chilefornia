@@ -1,0 +1,64 @@
+
+# Define a the study area boundary along the North American Pacific rim,
+# to roughly mirror the domain of Chile in South America.
+# Based on watershed boundaries, following the crest of the cordillera 
+# from Cabo through Glacier Bay.
+
+# Matthew Kling, June 2018
+
+
+library(tidyverse)
+library(raster)
+library(rgeos)
+library(rgdal)
+
+setwd("e:/chilefornia")
+
+
+# watersheds -- data from http://www.cec.org/tools-and-resources/map-files/watersheds
+w <- readOGR("E:/chilefornia/Watersheds_Shapefile/NA_Watersheds/data/NA_Watersheds", 
+             "watershed_p_v2")
+
+# boundary polygon manually drawn in google earth
+b <- readOGR("e:/chilefornia/chilefornia_v2.kml") %>%
+      spTransform(crs(w))
+
+# watersheds intersecting boundary
+o <- over(w, b)
+wb <- w[which(!is.na(o$Name)),]
+writeOGR(wb, dsn="watersheds_chilefornia_intersect.kml", layer="watersheds", 
+         driver="KML", overwrite=T)
+
+# elevation data
+altm <- getData("alt", country="MEX")
+altu <- getData("alt", country="USA") %>% Reduce("merge", .)
+altc <- getData("alt", country="CAN")
+alt <- altu %>% merge(altm) %>% merge(altc)
+alt <- crop(alt, spTransform(wb, crs(alt)))
+
+# projections
+b <- spTransform(b, crs(alt))
+w <- spTransform(w, crs(alt))
+wb <- spTransform(wb, crs(alt))
+
+# final study area: watersheds fully contained within boundary
+o <- over(wb, as(b, "SpatialLines"))
+ww <- wb[which(is.na(o)),]
+writeOGR(ww, dsn="watersheds_chilefornia_contained.kml", layer="watersheds", 
+         driver="KML", overwrite=T)
+sa <- gUnaryUnion(ww) %>%
+      SpatialPolygonsDataFrame(data.frame(x=1))
+writeOGR(sa, dsn="chilefornia_study_area_north.kml", layer="chilefornia", 
+         driver="KML", overwrite=T)
+saveRDS(sa, "study_area_north.rds")
+
+# plots
+plot(alt, col=colorRampPalette(c("darkgreen", "yellow", "white"))(20))
+plot(wb, add=T)
+plot(ww, add=T, border="red")
+plot(b, add=T, border="blue")
+
+plot(sa)
+plot(w, add=T)
+plot(sa, add=T, border="red")
+
