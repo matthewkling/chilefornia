@@ -15,6 +15,8 @@ library(rgdal)
 setwd("e:/chilefornia")
 
 
+####### NORTH AMERICA #######
+
 # watersheds -- data from http://www.cec.org/tools-and-resources/map-files/watersheds
 w <- readOGR("E:/chilefornia/Watersheds_Shapefile/NA_Watersheds/data/NA_Watersheds", 
              "watershed_p_v2")
@@ -59,6 +61,51 @@ plot(ww, add=T, border="red")
 plot(b, add=T, border="blue")
 
 plot(sa)
-plot(w, add=T)
-plot(sa, add=T, border="red")
+plot(w, add=T, border="gray80")
+plot(sa, add=T, border="darkred")
 
+
+
+####### SOUTH AMERICA #######
+
+chile <- getData("GADM", country="CHL", level=0)
+#ext <- drawExtent()
+ext <- extent(c(-77.87009, -65.24649, -56.5389, -16.84332))
+chile <- crop(chile, ext)
+saveRDS(chile, "data/study_area_south.rds")
+
+
+
+
+
+############################
+
+# side-by-side plots
+
+n <- readRDS("data/study_area_north.rds")
+s <- readRDS("data/study_area_south.rds") %>%
+      spTransform(crs(n))
+
+d <- broom::tidy(n) %>% mutate(region="north") %>%
+      rbind(broom::tidy(s) %>% mutate(region="south"))
+
+p <- ggplot(d %>% mutate(lat=abs(lat),
+                         long=ifelse(region=="south", long-35, long)), 
+            aes(long, abs(lat), group=paste(region, group))) +
+      geom_polygon(fill="gray50", color=NA) +
+      theme_minimal() +
+      theme(axis.title.x=element_blank(),
+            axis.text.x=element_blank()) +
+      coord_map("stereographic")
+ggsave("e:/chilefornia/chilefornia_map2.png", width=10, height=10, units="in")
+
+p <- ggplot(d %>% mutate(lat=abs(lat),
+                         long=ifelse(region=="south", long-40, long),
+                         lat=ifelse(region=="south", abs(lat)+7, lat)), 
+            aes(long, lat, group=paste(region, group))) +
+      geom_polygon(fill="gray50", color=NA) +
+      theme_minimal() +
+      theme(axis.title=element_blank(),
+            axis.text=element_blank()) +
+      coord_map("stereographic")
+ggsave("e:/chilefornia/chilefornia_map3.png", width=10, height=10, units="in")
