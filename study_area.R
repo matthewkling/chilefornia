@@ -82,9 +82,9 @@ saveRDS(chile, "data/study_area_south.rds")
 
 # side-by-side plots
 
-n <- readRDS("data/study_area_north.rds")
-s <- readRDS("data/study_area_south.rds") %>%
-      spTransform(crs(n))
+s <- readRDS("data/study_area_south.rds")
+n <- readRDS("data/study_area_north.rds") %>%
+      spTransform(crs(s))
 
 d <- broom::tidy(n) %>% mutate(region="north") %>%
       rbind(broom::tidy(s) %>% mutate(region="south"))
@@ -101,7 +101,7 @@ ggsave("e:/chilefornia/chilefornia_map2.png", width=10, height=10, units="in")
 
 p <- ggplot(d %>% mutate(lat=abs(lat),
                          long=ifelse(region=="south", long-40, long),
-                         lat=ifelse(region=="south", abs(lat)+7, lat)), 
+                         lat=ifelse(region=="south", abs(lat)+5, lat)), 
             aes(long, lat, group=paste(region, group))) +
       geom_polygon(fill="gray50", color=NA) +
       theme_minimal() +
