@@ -67,8 +67,11 @@ p <- ggplot(pd, aes(x, y)) +
             axis.text.x=element_blank()) +
       coord_fixed() +
       labs(y="degrees poleward")
-png(paste0("climate_figures/climate_map_continuous.png"), width=8, height=8, units="in", res=1000)
+png(paste0("climate_figures/climate_continuous.png"), width=8, height=8, units="in", res=1000)
 plot(p)
+dev.off()
+png(paste0("climate_figures/climate_continuous_v2.png"), width=8, height=8, units="in", res=1000)
+plot(p %+% mutate(pd, y=-y))
 dev.off()
 
 
@@ -86,18 +89,6 @@ for(k in c(5, 10, 15)){
       kr <- r[[1]]
       kr[!is.na(values(kr))] <- cluster
       
-      # visualize w distant colors
-      clrs <- distant_colors(k)[cluster]
-      p <- ggplot(pd, aes(x, y)) + 
-            geom_raster(fill=clrs) +
-            theme_minimal() +
-            theme(axis.title.x=element_blank(),
-                  axis.text.x=element_blank()) +
-            coord_fixed() +
-            labs(y="degrees poleward")
-      png(paste0("climate_figures/climate_map_clusters_distcol_", k, ".png"), width=8, height=8, units="in", res=1000)
-      plot(p)
-      dev.off()
       
       # visualize w hierarchical colors
       hclrs <- as.data.frame(cbind(cluster, col3d)) %>%
@@ -111,10 +102,64 @@ for(k in c(5, 10, 15)){
                   axis.text.x=element_blank()) +
             coord_fixed() +
             labs(y="degrees poleward")
-      png(paste0("climate_figures/climate_map_clusters_hiercol_", k, ".png"), width=8, height=8, units="in", res=1000)
+      png(paste0("climate_figures/climate_clusters_", k, "_hiercol.png"), width=8, height=8, units="in", res=1000)
+      plot(p)
+      dev.off()
+      png(paste0("climate_figures/climate_clusters_", k, "_hiercol_v2.png"), width=8, height=8, units="in", res=1000)
+      plot(p %+% mutate(pd, y=-y))
+      dev.off()
+      
+      
+      # visualize w distant colors
+      clrz <- distant_colors(k)
+      clrs <- clrz[cluster]
+      p <- ggplot(pd, aes(x, y)) + 
+            geom_raster(fill=clrs) +
+            theme_minimal() +
+            theme(axis.title.x=element_blank(),
+                  axis.text.x=element_blank()) +
+            coord_fixed() +
+            labs(y="degrees poleward")
+      png(paste0("climate_figures/climate_clusters_", k, "_distcol.png"), width=8, height=8, units="in", res=1000)
+      plot(p)
+      dev.off()
+      png(paste0("climate_figures/climate_clusters_", k, "_distcol_v2.png"), width=8, height=8, units="in", res=1000)
+      plot(p %+% mutate(pd, y=-y))
+      dev.off()
+      
+      x <- pd %>%
+            mutate(cluster=cluster) %>%
+            gather(var, value, -x, -y, -cluster) %>%
+            mutate(var=gsub("CHELSA_bio10_", "", var),
+                   var=paste0("bio", var),
+                   var=ecoclim::translate(var, "words"),
+                   var=ifelse(grepl("precip", var), paste(var, "(log)"), var))
+      
+      p <- ggplot(x %>% mutate(cluster=factor(cluster)), 
+                  aes(value, color=cluster, fill=cluster)) +
+            geom_density(alpha=.3) +
+            scale_color_manual(values=clrz) +
+            scale_fill_manual(values=clrz) +
+            facet_wrap(~var, scales="free_y", ncol=1) +
+            theme_minimal() +
+            theme(legend.position="none",
+                  axis.text.y=element_blank())
+      png(paste0("climate_figures/climate_clusters_", k, "_histograms.png"), width=8, height=8, units="in", res=1000)
       plot(p)
       dev.off()
 }
+
+
+############################################
+
+
+
+#dtc <- list.files("f:/chelsa/bio19", full.names=T)[1] %>% raster() %>%
+#      reclassify(c(NA,NA,1,-Inf,Inf,NA)) %>%
+#      distance()
+#saveRDS(dtc, "../dtc_chelsa.rds")
+
+elev <- raster("f:/chelsa/elevation/mn30_grd")
 
 
 
