@@ -91,7 +91,7 @@ water_balance <- function(rasters, #stack of 48 rasters: ppt1-12, tmean1-12, tma
                                   tmean=x[13:24],
                                   tmax=x[25:36],
                                   tmin=x[37:48])
-      wb <- calc(rasters, w)
+      wb <- calc(rasters, w, progress='text')
       names(wb) <- c("PPT", "PET", "AET", "CWD", "RAR")
       return(wb)
 }
