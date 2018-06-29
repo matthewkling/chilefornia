@@ -14,25 +14,19 @@ f <-  list.files("F:/chelsa/monthly48", full.names=T) %>%
       arrange(var, mo)
 
 # generate latitude raster
-#lat <- latitude(f$path[1], enforce_latlong=F)
+#lat <- latitude(f$path[1], already_latlong=T)
 #writeRaster(lat, "f:/chelsa/derived/latitude.tif")
-
-
-jmonths <- as.Date(0:364, format="%j", origin=as.Date("2018-01-01"))
-jmonths <- as.integer(substr(as.character(jmonths), 6, 7))
-dayspermonth <- as.vector(table(jmonths))
-
 
 # compute water balance variables
 r <- stack(c(f$path, "f:/chelsa/derived/latitude.tif"))
 names(r) <- c(paste0(f$var, f$mo), "latitude")
-wb_chelsa <- water_balance(r, temp_scalar=T, ncores=7)
+wb_chelsa <- water_balance(r, temp_scalar=0.1, ncores=7)
 writeRaster(wb_chelsa, "f:/chelsa/derived/water_balance.tif")
 
+
+
+
 stop("woooooo")
-
-
-
 
 
 ############### calculate WB for CHELSA #####################
