@@ -27,7 +27,7 @@ ETSR <- function(psi, # latitude, in degrees
 
 # mean S0 for a month of the year
 monthly_S0 <- function(month, latitude){
-           
+      
       # julian days for target month
       jdays <- which(jmonths==month)
       
@@ -65,20 +65,7 @@ hydro <- function(latitude, # integer
 }
 
 # calculate annual water balance variables for a raster stack
-water_balance <- function(rasters, #stack of 48 rasters: ppt1-12, tmean1-12, tmax1-12, tmin1-12
-                          enforce_latlong=TRUE){ # leave as T unless rasters are already in lat-long projection
-      
-      # create latitude raster
-      coords <- as.data.frame(coordinates(rasters))
-      if(enforce_latlong){
-            coordinates(coords) <- c("x", "y")
-            crs(coords) <- crs(rasters)
-            coords <- spTransform(coords, crs("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
-            coords <- coordinates(coords)
-      }
-      lat <- rasters[[1]]
-      lat[] <- coords[,2] # note: Wang et al 2012 page 21 use a latitude correction that we could decide to implement here
-      rasters <- stack(rasters, lat)
+water_balance <- function(rasters, temp_scalar, ncores){ #stack of 49 rasters: ppt1-12, tmean1-12, tmax1-12, tmin1-12, latitude
       
       # sequence of months corresponding to julian dates for a non-leap year
       jmonths <- as.Date(0:364, format="%j", origin=as.Date("2018-01-01"))
@@ -91,8 +78,46 @@ water_balance <- function(rasters, #stack of 48 rasters: ppt1-12, tmean1-12, tma
                                   tmean=x[13:24],
                                   tmax=x[25:36],
                                   tmin=x[37:48])
-      wb <- calc(rasters, w, progress='text')
+      if(temp_scalar) w <- function(x, ...) hydro(latitude=x[49], 
+                                                  ppt=x[1:12], 
+                                                  tmean=x[13:24]/10,
+                                                  tmax=x[25:36]/10,
+                                                  tmin=x[37:48]/10)
+      
+      
+      beginCluster(ncores, type="SOCK")
+      wb <- clusterR(rasters, calc, args=list(fun=w), 
+                     export=c("jmonths", "dayspermonth", "ETSR", "hargreaves", "hydro", "monthly_S0"))
+      #wb <- calc(rasters, w, progress='text')
+      endCluster()
+      
       names(wb) <- c("PPT", "PET", "AET", "CWD", "RAR")
       return(wb)
+}
+
+
+latitude <- function(template, 
+                     enforce_latlong=TRUE){ # leave as T unless rasters are already in lat-long projection
+      
+      
+      lat <- raster(template)
+      lat <- lat * 1
+      lat[] <- coordinates(lat)[,2]
+      return(lat)
+      
+      # FIXME: implement reprojection of non-lat-long coordinates
+      # (code below is deprecated version that is not memory-safe)
+      
+      # create latitude raster
+      coords <- as.data.frame(coordinates(raster))
+      if(enforce_latlong){
+            coordinates(coords) <- c("x", "y")
+            crs(coords) <- crs(rasters)
+            coords <- spTransform(coords, crs("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+            coords <- coordinates(coords)
+      }
+      lat <- raster
+      lat[] <- coords[,2] # note: Wang et al 2012 page 21 use a latitude correction that we could decide to implement here
+      return(lat)
 }
 
