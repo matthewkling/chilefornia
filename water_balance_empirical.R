@@ -24,9 +24,60 @@ wb_chelsa <- water_balance(r, temp_scalar=0.1, ncores=7)
 writeRaster(wb_chelsa, "f:/chelsa/derived/water_balance.tif")
 
 
+########## plots #########
 
 
-stop("woooooo")
+# plot input layers to diagnose artic issue
+for(i in 1:nlayers(r)){
+      png(paste0("f:/chelsa/charts/chelsa", i, ".png"), width=500, height=500)
+      plot(r[[i]], main=names(r)[i], colNA="black")
+      dev.off()
+}
+
+#pt <- drawExtent()
+pt <- data.frame(x=-129, y=68)
+coordinates(pt) <- c("x", "y")
+x <- raster::extract(r, pt)
+
+
+td <- expand.grid(month=1:12, latitude=-90:90) %>%
+      rowwise() %>%
+      mutate(S0=monthly_S0(month, latitude))
+ggplot(td, aes(latitude, S0, color=factor(month))) +
+      geom_line() +
+      scale_x_continuous(limits=c(-90,90), breaks=seq(-90,90,90)) +
+      theme_minimal()
+
+
+
+txt <- td %>%
+      filter(latitude %in% seq(-90, 90, 10)) %>%
+      group_by(latitude) %>%
+      filter(month==max(month[is.finite(S0)], na.rm=T))
+p <- ggplot(filter(td, latitude %in% seq(-90, 90, 10)),
+       aes(month, S0, color=factor(latitude))) +
+      geom_line() + geom_point() +
+      geom_text(data=txt, aes(month, S0, label=latitude), hjust=-.25) +
+      scale_x_continuous(breaks=1:12) +
+      scale_color_manual(values=colorRampPalette(c("magenta", "red", "black", "blue", "cyan"))(length(seq(-90, 90, 10)))) +
+      theme_minimal() +
+      theme(legend.position="none") +
+      labs(y="S0 (extraterrestrial solar radiation)")
+ggsave("e:/chilefornia/S0_month_latitude.png", p, width=8, height=6, units="in")
+
+# the method fails above the artic circle (66.3 degrees)
+ggplot(filter(td, latitude %in% c(66,67)),
+       aes(month, S0, color=factor(latitude))) +
+      geom_line() + geom_point() +
+      #geom_text(data=txt, aes(month, S0, label=latitude), hjust=-.25) +
+      scale_x_continuous(breaks=1:12) +
+      theme_minimal() +
+      theme(legend.position="none")
+
+png("e:/chilefornia/water_balance_chelsa.png", width=500, height=1500)
+plot(wb_chelsa, nc=1)
+dev.off()
+
 
 
 ############### calculate WB for CHELSA #####################
