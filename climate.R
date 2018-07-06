@@ -69,7 +69,7 @@ for(i in 3:ncol(v)) v[,i] <- scale(v[,i])
 r <- cor(v[,3:ncol(v)], method="spearman")
 row.names(r) <- ecoclim::translate(row.names(r), "words")
 row.names(r)[row.names(r)=="NULL"] <- colnames(r)[row.names(r)=="NULL"]
-png("e:/chilefornia/climate_r2.png", width=800, height=500)
+png("climate_figures/climate_r2.png", width=800, height=500)
 corrplot::corrplot(r^2, order="hclust", is.corr=F, 
                    col=colorRampPalette(c("white", "white",  "white", "white", "white",
                                           "white", 
