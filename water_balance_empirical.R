@@ -23,6 +23,13 @@ names(r) <- c(paste0(f$var, f$mo), "latitude")
 wb_chelsa <- water_balance(r, temp_scalar=0.1, ncores=7)
 writeRaster(wb_chelsa, "f:/chelsa/derived/water_balance.tif")
 
+wb_chelsa <- stack("f:/chelsa/derived/water_balance.tif")
+writeRaster(wb_chelsa, filename=paste0("f:/chelsa/derived/CHELSA_annual_",
+                                       c("PPT", "PET", "AET", "CWD", "RAR"),
+                                       "_1979_2013.tif"), bylayer=T)
+
+
+
 
 ########## plots #########
 

@@ -11,8 +11,10 @@ library(ggplot2)
 setwd("e:/chilefornia/chilefornia")
 
 # load climate rasters
-r <- list.files("f:/chelsa/bio19", full.names=T) %>% stack() %>% 
-      subset(paste0("CHELSA_bio10_", c(2,7,10,11,13,14,18,19)))
+r <- list.files("f:/chelsa/bio19", full.names=T) %>%
+      stack()
+wb <- stack("f:/chelsa/derived/water_balance.tif")
+names(wb) <- c("PPT", "PET", "AET", "CWD", "RAR")
 
 # load study area polygons
 s <- readRDS("data/study_area_south.rds") %>% spTransform(crs(r))
@@ -23,23 +25,115 @@ b <- readRDS("../chilefornia_shapefiles.rds")
 
 # climate within study areas
 r <- r %>% crop(b) %>% mask(b)
-saveRDS(r, "../chilefornia_climate.rds")
-r <- readRDS("../chilefornia_climate.rds")
+writeRaster(r, "../chilefornia_climate.tif")
+
+wb <- wb %>% crop(b) %>% mask(b)
+writeRaster(wb, "../chilefornia_water_balance.tif")
+
+stack("../chilefornia_climate.tif") %>%
+      stack(wb) %>%
+      writeRaster("../chilefornia_climate_all.tif", overwrite=T)
+
+
+r <- stack("../chilefornia_climate_all.tif")
 
 # convert raster to matrix
-v <- cbind(coordinates(r), values(r)) %>% na.omit()
+a <- !is.na(r[[1]][])
+v <- coordinates(r)[a,]
+for(i in 1:nlayers(r)){
+      message(paste("layer", i))
+      v <- cbind(v, r[[i]][][a])
+}
+v <- na.omit(v)
+
+vars <- list.files("f:/chelsa/bio19") %>%
+      gsub("CHELSA_bio10_|\\.tif", "", .) %>%
+      paste0("bio", .) %>%
+      c(c("PPT", "PET", "AET", "CWD", "RAR"))
+colnames(v) <- c("x", "y", vars)
+
+saveRDS(v, "chilefornia_climate_matrix_allvars.rds")
+v <- readRDS("chilefornia_climate_matrix_allvars.rds")
+v <- v[,colnames(v) != "PPT"] # eliminate duplicate variable
 
 # log-transform ppt vars; scale all vars
 alog <- function(x){
       x[x==0] <- min(x[x!=0])
       log10(x)
 }
-for(i in 7:10) v[,i] <- alog(v[,i])
+for(i in which(colnames(v) %in% c(paste0("bio", 12:18)))) v[,i] <- alog(v[,i])
 for(i in 3:ncol(v)) v[,i] <- scale(v[,i])
 
 
+# correlation plot
+r <- cor(v[,3:ncol(v)], method="spearman")
+row.names(r) <- ecoclim::translate(row.names(r), "words")
+row.names(r)[row.names(r)=="NULL"] <- colnames(r)[row.names(r)=="NULL"]
+png("e:/chilefornia/climate_r2.png", width=800, height=500)
+corrplot::corrplot(r^2, order="hclust", is.corr=F, 
+                   col=colorRampPalette(c("white", "white",  "white", "white", "white",
+                                          "white", 
+                                          "yellow", "orange", "red", "darkmagenta", "black"))(72))
+dev.off()
+
+
+
+
+
+# experiment with algorithmically finding the lowest-correlation variable set
+r <- cor(v[,3:ncol(v)], method="spearman")
+cmb <- combn(1:ncol(r), 5) %>% t()
+
+cors <- function(x){
+      #x <- cmb[1234,]
+      rx <- r[x,]
+      rxi <- rx[,x] ^ 2
+      #rxe <- rx[,-x] ^ 2
+      return(c(sum(rxi), max(rxi[rxi!=1])))
+}
+
+rd <- t(apply(cmb, 1, cors)) %>%
+      as.data.frame() %>%
+      cbind(t(apply(cmb, 1, function(x) colnames(r)[x])), .)
+colnames(rd) <- c(paste0("v", 1:5), "ri", "mi")
+
+rd <- rd %>% mutate(id=1:nrow(.),
+                    ntemp = apply(rd[,1:5], 1, function(x) sum(paste0("bio", 1:11) %in% x)),
+                    nprecip = apply(rd[,1:5], 1, function(x) sum(paste0("bio", 12:19) %in% x)),
+                    ncwd = apply(rd[,1:5], 1, function(x) sum("CWD" %in% x)))
+
+
+rd %>%
+      filter(ncwd==1, ntemp==2, nprecip==2) %>%
+      filter(ri==min(ri))
+
+rd %>%
+      filter(ncwd==1, ntemp==2, nprecip==2) %>%
+      filter(mi==min(mi)) %>%
+      filter(ri==min(ri)) %>%
+      gather(v, var, v1:v5) %>%
+      mutate(words = ecoclim::translate(var, "words"))
+
+rd %>%
+      filter(mi==min(mi)) %>%
+      filter(ri==min(ri)) %>%
+      gather(v, var, v1:v5) %>%
+      mutate(words = ecoclim::translate(var, "words"))
+
+
+
+
+### final selection of 5 variables ###
+
+variables <- c("bio5", "bio6", "bio15", "AET", "CWD")
+v <- v[,match(c("x", "y", variables), colnames(v))]
+
+
+
+
+
 # subsample pixels for speed
-px <- sample(nrow(v), 20000) # change this to 100k for production run
+px <- sample(nrow(v), 100000) # change this to 100k for production run
 
 # find sampled pixel most similar to each non-sampled pixel
 nn <- get.knnx(v[px,3:ncol(v)], v[,3:ncol(v)], k=1)
@@ -85,10 +179,6 @@ for(k in c(5, 10, 15)){
       # transfer cluster identities to non-sampled pixels
       cluster <- clust[nn$nn.index]
       
-      # back-convert to raster format and export
-      kr <- r[[1]]
-      kr[!is.na(values(kr))] <- cluster
-      
       
       # visualize w hierarchical colors
       hclrs <- as.data.frame(cbind(cluster, col3d)) %>%
@@ -131,9 +221,10 @@ for(k in c(5, 10, 15)){
             mutate(cluster=cluster) %>%
             gather(var, value, -x, -y, -cluster) %>%
             mutate(var=gsub("CHELSA_bio10_", "", var),
-                   var=paste0("bio", var),
-                   var=ecoclim::translate(var, "words"),
-                   var=ifelse(grepl("precip", var), paste(var, "(log)"), var))
+                   vr=var)
+      xv <- x$var
+      xv[!xv %in% c("AET", "CWD")] <- unlist(ecoclim::translate(xv[!xv %in% c("AET", "CWD")], "words"))
+      x$var <- xv
       
       p <- ggplot(x %>% mutate(cluster=factor(cluster)), 
                   aes(value, color=cluster, fill=cluster)) +
