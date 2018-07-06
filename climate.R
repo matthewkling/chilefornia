@@ -126,6 +126,7 @@ rd %>%
 ### final selection of 5 variables ###
 
 variables <- c("bio5", "bio6", "bio15", "AET", "CWD")
+variables <- c("bio5", "bio6", "AET", "CWD")
 v <- v[,match(c("x", "y", variables), colnames(v))]
 
 
