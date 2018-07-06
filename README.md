@@ -1,3 +1,3 @@
 # chilefornia
 
-![chilefornia](/climate_figures/climate_map_continuous.png)
+![chilefornia](/climate_figures/climate_continuous.png)
