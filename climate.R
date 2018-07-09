@@ -174,7 +174,7 @@ dev.off()
 tree <- hclust.vector(v[px,3:ncol(v)], method="ward")
 
 # cut tree into specified number of clusters
-for(k in c(5, 10, 15)){
+for(k in c(5:15)){
       clust <- cutree(tree, k)
       
       # transfer cluster identities to non-sampled pixels
@@ -240,6 +240,108 @@ for(k in c(5, 10, 15)){
       plot(p)
       dev.off()
 }
+
+
+############################################
+
+# assess which 5 variables best predict known vegetation formations
+# using random forests + recursive feature elimination
+
+library(rgdal)
+library(randomForest)
+
+#### data prep: climate and veg values for random points in chile
+
+r <- stack("../chilefornia_climate_all.tif")
+
+vars <- list.files("f:/chelsa/bio19") %>%
+      gsub("CHELSA_bio10_|\\.tif", "", .) %>%
+      paste0("bio", .) %>%
+      c(c("PPT", "PET", "AET", "CWD", "RAR"))
+names(r) <- vars
+
+
+veg <- readOGR("e:/chilefornia/Veg_Form_Chile", "Veg_Form_Chile")
+veg <- spTransform(veg, crs(r))
+
+pts <- r[[1]] %>% 
+      crop(extent(-137.5668, -66.41681, -55.98347, 0)) %>%
+      trim() %>%
+      rasterToPoints() %>%
+      as.data.frame() %>%
+      sample_n(10000)
+coordinates(pts) <- c("x", "y")
+crs(pts) <- crs(r)
+
+veg_pts <- over(pts, veg)
+clim_pts <- raster::extract(r, pts)
+
+d <- cbind(veg_pts, clim_pts) %>% na.omit()
+veg_pts <- d[,1]
+clim_pts <- d[,2:ncol(d)]
+
+vars <- colnames(clim_pts)
+vars <- vars[vars != "PPT"] # duplicate variable
+
+nreps <- 100
+rfe <- expand.grid(rep=1:nreps,
+                   var=vars,
+                   elim=NA,
+                   imp=NA,
+                   stringsAsFactors=F)
+
+for(rep in 1:nreps){
+      for(i in 1:(length(vars)-1)){
+            
+            # fit a random forest model
+            vrs <- colnames(clim_pts) %in% setdiff(vars, rfe$var[!is.na(rfe$elim) & rfe$rep==rep])
+            ss <- sample(nrow(clim_pts), 1000)
+            fit <- randomForest(x=clim_pts[ss,vrs], 
+                                y=factor(veg_pts[ss]), 
+                                importance=TRUE)
+            
+            # identify the least important variable 
+            # and add it to list of eliminated variables
+            imp <- fit$importance
+            imp <- imp[,ncol(imp)-1]
+            v <- imp[which.min(imp)]
+            rfe$elim[rfe$var==names(v) & rfe$rep==rep] <- i
+            rfe$imp[rfe$var==names(v) & rfe$rep==rep] <- v
+            message(paste("rep", rep, "-- eliminating", names(v)))
+      }
+      
+      # document the last variable that didn't get eliminated
+      imp <- fit$importance
+      imp <- imp[,ncol(imp)-1]
+      v <- imp[which.max(imp)]
+      rfe$elim[rfe$var==names(v) & rfe$rep==rep] <- i+1
+      rfe$imp[rfe$var==names(v) & rfe$rep==rep] <- v
+}
+
+rfe$variable <- NA
+
+rfe$variable <- ifelse(rfe$var %in% c("PPT", "RAR", "CWD", "AET", "PET"),
+                       as.character(rfe$var),
+                       ecoclim::translate(as.character(rfe$var)))
+rfe$variable <- unlist(rfe$variable)
+
+labs <- rfe %>%
+      group_by(variable) %>%
+      summarize(elim=mean(elim), imp=mean(imp))
+
+
+p <- ggplot(rfe, aes(imp, elim, group=imp)) +
+      #geom_line(color="gray80") +
+      #geom_point() +
+      geom_boxplot() +
+      geom_text(data=labs, aes(imp, elim, label=paste("  ", variable)), hjust=0) +
+      xlim(0, .6) +
+      theme_minimal() +
+      theme(plot.title=element_text(hjust=.5)) +
+      labs(x="importance when eliminated",
+           y="elimination order (high values most important)",
+           title="Climate variable importance in predicting Chilean vegetation formations\n(estimated using random forest models and recursive feature elimination)")
+ggsave("climate_figures/variable_importance.png", p, width=8, height=6, units="in")
 
 
 ############################################
