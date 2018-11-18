@@ -100,6 +100,7 @@ hydro <- function(latitude, # integer
 # calculate annual water balance variables for a raster stack
 water_balance <- function(rasters, # stack of 49 rasters: ppt1-12, tmean1-12, tmax1-12, tmin1-12, latitude
                           temp_scalar=1, # multiplier to convert input temperatures to deg C
+                          ppt_scalar=1, # multiplier to convert input precipitation to mm
                           ncores=1){ # number of computing cores to use for parallel processing
       
       # compute annual water balance variables
@@ -108,16 +109,15 @@ water_balance <- function(rasters, # stack of 49 rasters: ppt1-12, tmean1-12, tm
                                   tmean=x[13:24],
                                   tmax=x[25:36],
                                   tmin=x[37:48])
-      if(temp_scalar != 1) w <- function(x, ...) hydro(latitude=x[49], 
-                                                       ppt=x[1:12], 
+      if(temp_scalar != 1 | ppt_scalar != 1) w <- function(x, ...) hydro(latitude=x[49], 
+                                                       ppt=x[1:12] * ppt_scalar, 
                                                        tmean=x[13:24] * temp_scalar,
                                                        tmax=x[25:36] * temp_scalar,
                                                        tmin=x[37:48] * temp_scalar)
       
       beginCluster(ncores, type="SOCK")
       wb <- clusterR(rasters, calc, args=list(fun=w), 
-                     export=c("jmonths", "dayspermonth", "ETSR", "hargreaves", "hydro", "monthly_S0"))
-      #wb <- calc(rasters, w, progress='text')
+                     export=c("ETSR", "hargreaves", "hydro", "monthly_S0"))
       endCluster()
       
       names(wb) <- c("PPT", "PET", "AET", "CWD", "RAR")
