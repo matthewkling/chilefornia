@@ -162,8 +162,10 @@ pd <- as.data.frame(v) %>%
              y=abs(y))
 
 # continuous color plot
+c3d <- apply(col3d, 2, function(x) ecdf(x)(x))
 p <- ggplot(pd, aes(x, y)) + 
-      geom_raster(fill=rgb(col3d, maxColorValue=255)) +
+      #geom_raster(fill=rgb(col3d, maxColorValue=255)) +
+      geom_raster(fill=rgb(1-c3d[,c(3,2,1)], maxColorValue=1)) +
       theme_minimal() +
       theme(axis.title.x=element_blank(),
             axis.text.x=element_blank()) +
