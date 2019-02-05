@@ -12,7 +12,7 @@ library(raster)
 library(rgeos)
 library(rgdal)
 
-setwd("e:/chilefornia")
+#setwd("e:/chilefornia")
 
 
 ####### NORTH AMERICA #######
@@ -68,10 +68,13 @@ plot(sa, add=T, border="darkred")
 
 ####### SOUTH AMERICA #######
 
-chile <- getData("GADM", country="CHL", level=0)
+#setwd("e:/chilefornia/chilefornia")
+
+#chile <- getData("GADM", country="CHL", level=0)
+chile <- readRDS("data/SA_new_january19.rds")
 #ext <- drawExtent()
-ext <- extent(c(-77.87009, -65.24649, -56.5389, -16.84332))
-chile <- crop(chile, ext)
+#ext <- extent(c(-77.87009, -65.24649, -56.5389, -16.84332))
+#chile <- crop(chile, ext)
 saveRDS(chile, "data/study_area_south.rds")
 
 

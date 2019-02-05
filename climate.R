@@ -17,7 +17,7 @@ wb <- stack("f:/chelsa/derived/water_balance.tif")
 names(wb) <- c("PPT", "PET", "AET", "CWD", "RAR")
 
 # load study area polygons
-s <- readRDS("data/study_area_south.rds") %>% spTransform(crs(r))
+s <- readRDS("data/study_area_south.rds") %>% spTransform(crs(r)) %>% gBuffer(width=0)
 n <- readRDS("data/study_area_north.rds") %>% spTransform(crs(r))
 b <- gUnion(n, s)
 saveRDS(b, "../chilefornia_shapefiles.rds")
@@ -25,10 +25,10 @@ b <- readRDS("../chilefornia_shapefiles.rds")
 
 # climate within study areas
 r <- r %>% crop(b) %>% mask(b)
-writeRaster(r, "../chilefornia_climate.tif")
+writeRaster(r, "../chilefornia_climate.tif", overwrite=T)
 
 wb <- wb %>% crop(b) %>% mask(b)
-writeRaster(wb, "../chilefornia_water_balance.tif")
+writeRaster(wb, "../chilefornia_water_balance.tif", overwrite=T)
 
 stack("../chilefornia_climate.tif") %>%
       stack(wb) %>%
@@ -36,6 +36,7 @@ stack("../chilefornia_climate.tif") %>%
 
 
 r <- stack("../chilefornia_climate_all.tif")
+template <- r[[1]]
 
 # convert raster to matrix
 a <- !is.na(r[[1]][])
@@ -44,7 +45,12 @@ for(i in 1:nlayers(r)){
       message(paste("layer", i))
       v <- cbind(v, r[[i]][][a])
 }
+v0 <- v
+a0 <- apply(v0, 1, function(x) !is.na(sum(x)))
 v <- na.omit(v)
+
+ar <- a
+ar[ar] <- a0
 
 vars <- list.files("f:/chelsa/bio19") %>%
       gsub("CHELSA_bio10_|\\.tif", "", .) %>%
@@ -127,6 +133,7 @@ rd %>%
 
 variables <- c("bio5", "bio6", "bio15", "AET", "CWD")
 variables <- c("bio5", "bio6", "AET", "CWD")
+variables <- c("bio1", "bio11", "bio17", "CWD")
 v <- v[,match(c("x", "y", variables), colnames(v))]
 
 
@@ -174,17 +181,26 @@ dev.off()
 tree <- hclust.vector(v[px,3:ncol(v)], method="ward")
 
 # cut tree into specified number of clusters
-for(k in c(5:15)){
+for(k in c(5:10)){
       clust <- cutree(tree, k)
       
       # transfer cluster identities to non-sampled pixels
       cluster <- clust[nn$nn.index]
       
       
+      # raster of clusters
+      cr <- template
+      cr[] <- NA
+      cr[ar] <- cluster
+      writeRaster(cr, paste0("cluster_rasters/clusters_k", k, "_",
+                             paste(variables, collapse="+"), ".tif"),
+                  overwrite=T)
+      #next()
+      
       # visualize w hierarchical colors
       hclrs <- as.data.frame(cbind(cluster, col3d)) %>%
             group_by(cluster) %>%
-            mutate_each(funs(mean)) %>%
+            mutate_all(funs(mean)) %>%
             mutate(hex=rgb(red, green, blue, maxColorValue=255))
       p <- ggplot(pd, aes(x, y)) + 
             geom_raster(fill=hclrs$hex) +
@@ -261,87 +277,188 @@ vars <- list.files("f:/chelsa/bio19") %>%
 names(r) <- vars
 
 
-veg <- readOGR("e:/chilefornia/Veg_Form_Chile", "Veg_Form_Chile")
-veg <- spTransform(veg, crs(r))
 
-pts <- r[[1]] %>% 
-      crop(extent(-137.5668, -66.41681, -55.98347, 0)) %>%
-      trim() %>%
-      rasterToPoints() %>%
-      as.data.frame() %>%
-      sample_n(10000)
-coordinates(pts) <- c("x", "y")
-crs(pts) <- crs(r)
+#vegN <- readOGR("e:/chilefornia/veg_NA", "Ecoregions_NA")
+#veg <- readOGR("e:/chilefornia/Veg_Form_Chile", "Veg_Form_Chile")
+#veg <- spTransform(veg, crs(r))
 
-veg_pts <- over(pts, veg)
-clim_pts <- raster::extract(r, pts)
 
-d <- cbind(veg_pts, clim_pts) %>% na.omit()
-veg_pts <- d[,1]
-clim_pts <- d[,2:ncol(d)]
+vegS <- raster("e:/chilefornia/vegformations/chile_form.tif")
+vegN <- raster("e:/chilefornia/vegformations/na_form.tif")
 
-vars <- colnames(clim_pts)
-vars <- vars[vars != "PPT"] # duplicate variable
-
-nreps <- 100
-rfe <- expand.grid(rep=1:nreps,
-                   var=vars,
-                   elim=NA,
-                   imp=NA,
-                   stringsAsFactors=F)
-
-for(rep in 1:nreps){
-      for(i in 1:(length(vars)-1)){
+imp <- data.frame()
+for(veg in list(vegS, vegN)){
+      
+      pts <- r[[1]] %>% 
+            #crop(extent(-137.5668, -66.41681, -55.98347, 0)) %>%
+            crop(veg) %>%
+            trim() %>%
+            rasterToPoints() %>%
+            as.data.frame() %>%
+            sample_n(100000)
+      coordinates(pts) <- c("x", "y")
+      crs(pts) <- crs(r)
+      
+      veg_pts <- extract(veg, pts)
+      clim_pts <- extract(r, pts)
+      
+      d <- cbind(veg_pts, clim_pts) %>% na.omit()
+      veg_pts <- d[,1]
+      clim_pts <- d[,2:ncol(d)]
+      
+      vars <- colnames(clim_pts)
+      vars <- vars[!vars %in% c("PPT", "bio3", "bio7", "RAR")] # duplicated & unwanted variables
+      
+      nreps <- 1000
+      rfe <- expand.grid(rep=1:nreps,
+                         var=vars,
+                         elim=NA,
+                         imp=NA,
+                         stringsAsFactors=F)
+      
+      
+      library(doParallel)
+      cl <- makeCluster(detectCores()-2)
+      registerDoParallel(cl)
+      rfe <- foreach(rp = 1:nreps, .combine="rbind") %dopar% {
             
-            # fit a random forest model
-            vrs <- colnames(clim_pts) %in% setdiff(vars, rfe$var[!is.na(rfe$elim) & rfe$rep==rep])
+            require(randomForest)
+            require(tidyverse)
+            
+            rfd <- filter(rfe, rep==rp)
             ss <- sample(nrow(clim_pts), 1000)
-            fit <- randomForest(x=clim_pts[ss,vrs], 
-                                y=factor(veg_pts[ss]), 
-                                importance=TRUE)
             
-            # identify the least important variable 
-            # and add it to list of eliminated variables
+            for(i in 1:(length(vars)-1)){
+                  
+                  # fit a random forest model
+                  vrs <- colnames(clim_pts) %in% setdiff(vars, rfd$var[!is.na(rfd$elim)])
+                  fit <- randomForest(x=clim_pts[ss,vrs], 
+                                      y=factor(veg_pts[ss]), 
+                                      importance=TRUE)
+                  
+                  # identify the least important variable 
+                  # and add it to list of eliminated variables
+                  imp <- fit$importance
+                  imp <- imp[,ncol(imp)-1]
+                  v <- imp[which.min(imp)]
+                  rfd$elim[rfd$var==names(v)] <- i
+                  rfd$imp[rfd$var==names(v)] <- v
+                  #message(paste("rep", rep, "-- eliminating", names(v)))
+            }
+            
+            # document the last variable that didn't get eliminated
             imp <- fit$importance
             imp <- imp[,ncol(imp)-1]
-            v <- imp[which.min(imp)]
-            rfe$elim[rfe$var==names(v) & rfe$rep==rep] <- i
-            rfe$imp[rfe$var==names(v) & rfe$rep==rep] <- v
-            message(paste("rep", rep, "-- eliminating", names(v)))
+            v <- imp[which.max(imp)]
+            rfd$elim[rfd$var==names(v)] <- i+1
+            rfd$imp[rfd$var==names(v)] <- v
+            
+            return(rfd)
       }
+      stopCluster(cl)
       
-      # document the last variable that didn't get eliminated
-      imp <- fit$importance
-      imp <- imp[,ncol(imp)-1]
-      v <- imp[which.max(imp)]
-      rfe$elim[rfe$var==names(v) & rfe$rep==rep] <- i+1
-      rfe$imp[rfe$var==names(v) & rfe$rep==rep] <- v
+      rfe$variable <- NA
+      
+      rfe$variable <- ifelse(rfe$var %in% c("PPT", "RAR", "CWD", "AET", "PET"),
+                             as.character(rfe$var),
+                             ecoclim::translate(as.character(rfe$var)))
+      rfe$variable <- unlist(rfe$variable)
+      
+      rfe$region <- names(veg)[1]
+      
+      imp <- rbind(imp, rfe)
+      
 }
 
-rfe$variable <- NA
 
-rfe$variable <- ifelse(rfe$var %in% c("PPT", "RAR", "CWD", "AET", "PET"),
-                       as.character(rfe$var),
-                       ecoclim::translate(as.character(rfe$var)))
-rfe$variable <- unlist(rfe$variable)
 
-labs <- rfe %>%
+
+
+labs <- imp %>%
       group_by(variable) %>%
       summarize(elim=mean(elim), imp=mean(imp))
 
+rfed <- imp %>%
+      group_by(variable) %>%
+      mutate(rank=mean(elim)) %>%
+      arrange(rank) %>%
+      ungroup() %>%
+      mutate(variable=factor(.$variable, levels=unique(variable))) %>%
+      group_by(variable, elim) %>%
+      mutate(rank=mean(rank),
+             n=length(rank))
 
-p <- ggplot(rfe, aes(imp, elim, group=imp)) +
-      #geom_line(color="gray80") +
-      #geom_point() +
-      geom_boxplot() +
-      geom_text(data=labs, aes(imp, elim, label=paste("  ", variable)), hjust=0) +
-      xlim(0, .6) +
+p <- ggplot(rfed, aes(elim, variable, size=n)) +
+      geom_point() +
+      theme_minimal() +
       theme_minimal() +
       theme(plot.title=element_text(hjust=.5)) +
-      labs(x="importance when eliminated",
-           y="elimination order (high values most important)",
+      labs(x="elimination order (high values are most important variables)",
            title="Climate variable importance in predicting Chilean vegetation formations\n(estimated using random forest models and recursive feature elimination)")
 ggsave("climate_figures/variable_importance.png", p, width=8, height=6, units="in")
+
+
+
+
+
+labs <- imp %>%
+      group_by(variable, region) %>%
+      summarize(elim=mean(elim), imp=mean(imp))
+
+rfed <- imp %>%
+      group_by(variable) %>%
+      mutate(rank=mean(elim)) %>%
+      arrange(rank) %>%
+      ungroup() %>%
+      mutate(variable=factor(.$variable, levels=unique(variable))) %>%
+      group_by(variable, elim, region) %>%
+      mutate(rank=mean(rank),
+             n=length(rank))
+
+p <- ggplot(rfed, aes(elim, variable, size=n)) +
+      geom_point() +
+      facet_wrap(~region) +
+      theme_minimal() +
+      theme(plot.title=element_text(hjust=.5)) +
+      labs(x="elimination order (high values are most important variables)",
+           title="Climate variable importance in predicting vegetation formations\n(estimated using random forest models and recursive feature elimination)")
+ggsave("climate_figures/variable_importance.png", p, width=14, height=6, units="in")
+p <- ggplot(rfed %>% arrange(desc(n)), 
+            aes(elim, variable, size=n, color=region)) +
+      geom_point() +
+      theme_minimal() +
+      theme(plot.title=element_text(hjust=.5)) +
+      labs(x="elimination order (high values are most important variables)",
+           title="Climate variable importance in predicting Chilean vegetation formations\n(estimated using random forest models and recursive feature elimination)")
+#ggsave("climate_figures/variable_importance.png", p, width=8, height=6, units="in")
+
+
+rd <- imp %>%
+      group_by(variable, region) %>%
+      summarize(rank=mean(elim),
+                min=quantile(elim, .05),
+                max=quantile(elim, .95)) %>%
+      arrange(rank) %>%
+      ungroup() %>%
+      mutate(variable=factor(.$variable, levels=unique(variable))) %>%
+      gather(stat, value, rank, min, max) %>%
+      unite(region_stat, region, stat) %>%
+      spread(region_stat, value)
+
+p <- ggplot(rd, aes(chile_form_rank, na_form_rank)) +
+      geom_abline(slope=1, intercept=0, linetype=2, color="gray80") +
+      geom_segment(aes(x=chile_form_min, xend=chile_form_max,
+                       y=na_form_rank, yend=na_form_rank), color="gray") +
+      geom_segment(aes(x=chile_form_rank, xend=chile_form_rank,
+                       y=na_form_min, yend=na_form_max), color="gray") +
+      geom_point() +
+      geom_text(aes(label=variable, x=chile_form_rank+.15,
+                    y=na_form_rank-.2), hjust=0) +
+      theme_minimal() +
+      theme(panel.grid=element_blank()) +
+      labs(x="Chile variable importance (high values are more important)",
+           y="North America variable importance")
+ggsave("climate_figures/variable_importance_scatter.png", p, width=8, height=8, units="in")
 
 
 ############################################
