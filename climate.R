@@ -52,13 +52,15 @@ v <- na.omit(v)
 ar <- a
 ar[ar] <- a0
 
+
 vars <- list.files("f:/chelsa/bio19") %>%
       gsub("CHELSA_bio10_|\\.tif", "", .) %>%
       paste0("bio", .) %>%
       c(c("PPT", "PET", "AET", "CWD", "RAR"))
 colnames(v) <- c("x", "y", vars)
-
 saveRDS(v, "chilefornia_climate_matrix_allvars.rds")
+
+
 v <- readRDS("chilefornia_climate_matrix_allvars.rds")
 v <- v[,colnames(v) != "PPT"] # eliminate duplicate variable
 
@@ -182,13 +184,14 @@ dev.off()
 # fit clusters
 tree <- hclust.vector(v[px,3:ncol(v)], method="ward")
 
-# cut tree into specified number of clusters
-for(k in c(5:10)){
+for(k in c(5:15)){
+      message(k)
+      
+      # cut tree into specified number of clusters
       clust <- cutree(tree, k)
       
       # transfer cluster identities to non-sampled pixels
       cluster <- clust[nn$nn.index]
-      
       
       # raster of clusters
       cr <- template
@@ -197,7 +200,6 @@ for(k in c(5:10)){
       writeRaster(cr, paste0("cluster_rasters/clusters_k", k, "_",
                              paste(variables, collapse="+"), ".tif"),
                   overwrite=T)
-      #next()
       
       # visualize w hierarchical colors
       hclrs <- as.data.frame(cbind(cluster, col3d)) %>%
