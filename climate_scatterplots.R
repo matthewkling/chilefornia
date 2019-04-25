@@ -38,13 +38,14 @@ ds <- extract(climate, bs) %>% as.data.frame() %>% na.omit() %>% mutate(region="
 dn <- extract(climate, bn) %>% as.data.frame() %>% na.omit() %>% mutate(region="north")
 d <- rbind(dn, ds)
 saveRDS(d, "E:/chilefornia/ns_data.rds")
-d <- readRDS("E:/chilefornia/ns_data.rds")
+
 
 
 #### analysis
 
-
-d <- mutate(d, bio7 = bio6 - bio5) %>% select(-bio12)
+d <- readRDS("E:/chilefornia/ns_data.rds") %>% 
+      mutate(bio7 = bio6 - bio5) %>% 
+      select(-bio12)
 
 cm <- cor(select(d, -x, -y, -region) %>% sample_n(10000))
 png("E:/chilefornia/chilefornia/overlap_figures/corr.png")
@@ -64,7 +65,7 @@ sets <- list("set1" = c("cwd", "aet", "bio5", "bio6"),
              "set10" = c("cwd", "bio5", "bio6", "pwp"))
 
 
-for(sn in names(sets)[c(2:4, 7:10)]){
+for(sn in names(sets)[c(1:4, 7:10)]){
       message(sn)
       set <- sets[[sn]]
       
@@ -141,4 +142,13 @@ for(sn in names(sets)[c(2:4, 7:10)]){
              width=12, height=6, units="in")
       
 }
+
+
+
+d %>%
+      sample_n(2000) %>%
+      ggplot(aes(aet, bio6, color=pwp)) +
+      geom_point() +
+      scale_color_viridis_c() +
+      facet_wrap(~region)
 
