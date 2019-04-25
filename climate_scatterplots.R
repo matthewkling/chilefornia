@@ -59,173 +59,86 @@ sets <- list("set1" = c("cwd", "aet", "bio5", "bio6"),
              "set5" = c("cwd", "aet", "bio5", "bio6", "pwp"),
              "set6" = c("cwd", "ppt", "bio5", "bio6", "pwp"),
              "set7" = c("cwd", "aet", "bio1", "bio7", "pwp"),
-             "set8" = c("cwd", "ppt", "bio1", "bio7", "pwp"))
+             "set8" = c("cwd", "ppt", "bio1", "bio7", "pwp"),
+             "set9" = c("cwd", "bio1", "bio7", "pwp"),
+             "set10" = c("cwd", "bio5", "bio6", "pwp"))
 
-for(sn in names(sets)[2]){
+
+for(sn in names(sets)[c(2:4, 7:10)]){
       message(sn)
       set <- sets[[sn]]
       
-      s <- d %>%
-            mutate(ppt = log10(ppt + 1)) %>%
-            select(c(set, "region")) %>%
-            group_by(region) %>%
-            sample_n(10000) %>%
-            ungroup() %>%
-            sample_n(nrow(.))
-      pd <- pairsData(s, set, "region", mirror=T) %>%
-            mutate(x_var = factor(x_var, levels=set),
-                   y_var = factor(y_var, levels=set))
+      s <- d %>% 
+            #mutate(ppt = log10(ppt + 1)) %>%
+            na.omit() %>%
+            distinct() %>%
+            arrange(region) %>%
+            split(.$region)
       
-      # LDA
-      #formula <- paste("region ~", paste(set, collapse=" + "))
-      #fit <- MASS::lda(as.formula(formula), data=d)
-      #s$fit <- predict(fit, s)$class
-      #message(mean(s$region==s$fit, na.rm=T))
-      
-      ### 2D overlap ###
-      if(F){
-            v <- c("bio1", "bio4")
-            if(sn=="set2") v <- c("bio5", "bio6")
-            
-            hd <- s %>%
-                  mutate_at(vars(set), signif, digits=5) %>%
-                  split(.$region) %>%
-                  map(select, v) %>%
-                  map(na.omit) %>%
-                  map(distinct) %>%
-                  map(as.matrix)
-            h <- do.call("rbind", hd)
-            
-            ih <- map(hd, convhulln) %>%
-                  map(inhulln, p=h) %>%
-                  do.call("cbind", .) %>%
-                  as.data.frame()
-            
-            h <- cbind(h, ih)
-            
-            
-            p2 <- ggplot(h %>% mutate(clr=paste(north, south)), 
-                         aes_string(v[1], v[2], color="clr")) +
-                  geom_point() +
-                  scale_color_manual(values=c("red", "blue", "purple")) +
-                  xlim(min(d[,v[1]]), max(d[,v[1]])) +
-                  ylim(min(d[,v[2]]), max(d[,v[2]])) +
-                  theme_minimal() +
-                  theme(legend.position="none") +
-                  labs(title=paste(signif(mean(ih$north & ih$south), 3)*100, "% overlap"))
-            ggsave(paste0("E:/chilefornia/chilefornia/overlap_figures/pairs_", sn, "_2D.png"), 
-                   width=8, height=8, units="in")
-      }
-      
-      ### full-D overlap ###
+      ## convex hull method ##
       
       hd <- s %>%
-            mutate_at(vars(set), signif, digits=5) %>%
-            split(.$region) %>%
             map(select, set) %>%
-            map(na.omit) %>%
-            map(distinct) %>%
             map(as.matrix)
       h <- do.call("rbind", hd)
       
-      ih <- map(hd, convhulln) %>%
+      hull <- map(hd, convhulln) %>%
             map(inhulln, p=h) %>%
             do.call("cbind", .) %>%
             as.data.frame()
-      
-      p6 <- ggplot(pd, aes(x_value, y_value, color=region)) +
-            geom_point(size=.2) +
-            scale_color_manual(values=c("dodgerblue", "darkred")) +
-            facet_grid(y_var ~ x_var, scales="free") +
-            theme_minimal() +
-            labs(title=paste0(sn, ": ", paste(set, collapse=", "),"\n", 
-                             signif(mean(ih$north & ih$south), 3)*100, "% overlap"))
-      ggsave(paste0("E:/chilefornia/chilefornia/overlap_figures/pairs_", sn, ".png"), 
-             width=8, height=8, units="in")
+      names(hull) <- paste0("hull_", names(hull))
       
       
-      if(sn=="set2"){
-            s <- d %>% 
-                  mutate(ppt = log10(ppt + 1)) %>%
-                  na.omit()
+      ## MESS method ##
+      
+      hd <- s %>%
+            map(select, c("x", "y", set))
+      h <- do.call("rbind", hd)
+      
+      mess <- map(hd, function(x) ecospat.mess(proj=h, cal=x)) %>%
+            map(as.data.frame) %>%
+            map(select, MESS) %>%
+            do.call("cbind", .)
+      names(mess) <- c("mess_north", "mess_south")
+      
+      
+      ## ExDet method ##
+      
+      hd <- s %>%
+            map(select, set)
+      h <- do.call("rbind", hd)
+      
+      exdet <- map(hd, ecospat.climan, p=h) %>%
+            do.call("cbind", .) %>%
+            as.data.frame()
+      names(exdet) <- c("exdet_north", "exdet_south")
+      
+      
+      
+      
+      ## plot ##
+      
+      p <- s %>%
+            bind_rows() %>%
+            bind_cols(hull, mess, exdet) %>%
+            mutate(hull = hull_north & hull_south,
+                   mess = exdet_north > 0 & exdet_south > 0,
+                   exdet = exdet_north > 0 & exdet_north < 1 &
+                         exdet_south > 0 & exdet_south < 1) %>%
+            select(x, y, region, hull:exdet) %>%
+            gather(metric, overlap, hull:exdet) %>%
+            mutate(metric = factor(metric, levels=c("mess", "exdet", "hull"))) %>%
             
-            hd <- s %>%
-                  mutate_at(vars(set), signif, digits=5) %>%
-                  arrange(region) %>%
-                  split(.$region) %>%
-                  map(select, set) %>%
-                  map(as.matrix)
-            h <- do.call("rbind", hd)
-            
-            ih <- map(hd, convhulln) %>%
-                  map(inhulln, p=h) %>%
-                  do.call("cbind", .) %>%
-                  as.data.frame() %>%
-                  bind_cols(s)
-            
-            p <- ggplot(ih %>% mutate(overlap = north & south) %>%
-                              group_by(region) %>%
-                              mutate(po = signif(mean(overlap)*100, 3),
-                                     label = paste0(region, ": ", po, "% overlap")), 
-                   aes(x, y, fill=overlap)) +
-                  geom_raster() +
-                  facet_wrap(~label, scales="free") +
-                  theme_void() +
-                  labs(title=paste0(sn, ": ", paste(set, collapse=", "), "\n"))
-            ggsave(paste0("E:/chilefornia/chilefornia/overlap_figures/map_", sn, ".png"), 
-                   width=6, height=8, units="in")
-      }
-      
-      
-      next()
-      ### ecospat.mess ###
-      
-      md <- d %>%
-            split(.$region) %>%
-            map(select, c("x", "y", v)) %>%
-            map(na.omit)
-      
-      mn <- ecospat.mess(md[[1]], md[[2]]) %>% 
-            as.data.frame() %>% 
-            cbind(select(md[[1]], v)) 
-      ms <- ecospat.mess(md[[2]], md[[1]]) %>% 
-            as.data.frame() %>% 
-            cbind(select(md[[2]], v))
-      
-      pn <- ggplot() +
-            geom_point(data=ms %>% sample_n(5000), 
-                       aes_string(v[1], v[2]), color="gray80") +
-            geom_point(data=mn %>% sample_n(5000), 
-                       aes_string(v[1], v[2], color="MESSw")) +
-            scale_color_gradientn(colours=c("darkred", "orange",  "dodgerblue", "darkblue"),
-                                  values=c(0, .49, .51, 1),
-                                  limits=max(abs(range(mn[,"MESSw"])))*c(-1, 1)) +
-            xlim(min(d[,v[1]]), max(d[,v[1]])) +
-            ylim(min(d[,v[2]]), max(d[,v[2]])) +
-            theme_minimal() +
-            theme() +
-            labs(title="MESS north")
-      ps <- ggplot() +
-            geom_point(data=mn %>% sample_n(5000), 
-                       aes_string(v[1], v[2]), color="gray80") +
-            geom_point(data=ms %>% sample_n(5000), 
-                       aes_string(v[1], v[2], color="MESSw")) +
-            scale_color_gradientn(colours=c("darkred", "orange", "dodgerblue", "darkblue"),
-                                  values=c(0, .49, .51, 1),
-                                  limits=max(abs(range(ms[,"MESSw"])))*c(-1, 1)) +
-            xlim(min(d[,v[1]]), max(d[,v[1]])) +
-            ylim(min(d[,v[2]]), max(d[,v[2]])) +
-            theme_minimal() +
-            theme() +
-            labs(title="MESS south")
-      #ggsave(paste0("E:/chilefornia/chilefornia/overlap_figures/pairs_", sn, "_2D_mess.png"), 
-      #       width=8, height=8, units="in")
-      
-      p <- arrangeGrob(p2, pn, ps, nrow=1)
-      png(paste0("E:/chilefornia/chilefornia/overlap_figures/", sn, ".png"), 
-          width=1200, height=400)
-      grid.draw(p)
-      dev.off()
+            ggplot(aes(x, y, fill=overlap)) +
+            geom_raster() +
+            scale_fill_manual(values=c("darkred", "gray75")) +
+            facet_wrap(~region+metric, scales="free", nrow=1) +
+            theme_void() +
+            labs(title=paste0(sn, ": ", paste(set, collapse=", "), "\n")) +
+            theme(plot.title=element_text(hjust=.5),
+                  legend.position="top")
+      ggsave(paste0("E:/chilefornia/chilefornia/overlap_figures/map_", sn, ".png"), 
+             width=12, height=6, units="in")
       
 }
 
