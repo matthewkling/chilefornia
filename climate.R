@@ -18,7 +18,7 @@ names(wb) <- c("PPT", "PET", "AET", "CWD", "RAR")
 
 # load study area polygons
 s <- readRDS("data/study_area_south.rds") %>% spTransform(crs(r)) %>% gBuffer(width=0)
-n <- readRDS("data/study_area_north.rds") %>% spTransform(crs(r))
+n <- readRDS("data/NA_April.rds") %>% spTransform(crs(r))
 b <- gUnion(n, s)
 saveRDS(b, "../chilefornia_shapefiles.rds")
 b <- readRDS("../chilefornia_shapefiles.rds")
@@ -47,7 +47,7 @@ for(i in 1:nlayers(r)){
 }
 v0 <- v
 a0 <- apply(v0, 1, function(x) !is.na(sum(x)))
-v <- na.omit(v)
+#v <- na.omit(v)
 
 ar <- a
 ar[ar] <- a0
@@ -131,15 +131,14 @@ rd %>%
 
 
 
+
 ### final selection of 5 variables ###
 
 variables <- c("bio5", "bio6", "bio15", "AET", "CWD")
 variables <- c("bio5", "bio6", "AET", "CWD")
 variables <- c("bio1", "bio11", "bio17", "CWD")
+variables <- c("bio5", "bio6", "bio12", "CWD")
 v <- v[,match(c("x", "y", variables), colnames(v))]
-
-
-
 
 
 # subsample pixels for speed
